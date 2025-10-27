@@ -1,97 +1,36 @@
-import { getUserEvents } from '@/lib/queries/events'
-import Link from 'next/link'
-import { deleteEvent } from '@/lib/actions/delete-event'
+import { getUserEvents } from "@/lib/queries/events";
+import { EventCard } from "@/components/events/EventCard";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams?: { search?: string; sport?: string }
-}) {
-  const search = searchParams?.search || ''
-  const sport = searchParams?.sport || ''
-  const events = await getUserEvents(search, sport)
+export default async function DashboardPage() {
+  const events = await getUserEvents();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-2xl font-bold">My Events</h2>
-        <Link
-          href="/dashboard/create"
-          className="px-4 py-2 text-sm font-medium bg-primary text-white rounded hover:bg-primary/90"
-        >
-          + Create Event
+    <main className="container py-10">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">My Events</h1>
+        <Link href="/create">
+          <Button variant="default">+ Create Event</Button>
         </Link>
       </div>
 
-      <form className="flex flex-col sm:flex-row gap-4">
-        <input
-          name="search"
-          type="text"
-          placeholder="Search events..."
-          defaultValue={search}
-          className="w-full px-3 py-2 border rounded-md"
-        />
-        <select
-          name="sport"
-          defaultValue={sport}
-          className="px-3 py-2 border rounded-md"
-        >
-          <option value="">All Sports</option>
-          <option value="Basketball">Basketball</option>
-          <option value="Soccer">Soccer</option>
-          <option value="Tennis">Tennis</option>
-          <option value="Football">Football</option>
-        </select>
-        <button
-          type="submit"
-          className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
-        >
-          Filter
-        </button>
-      </form>
-
       {events.length === 0 ? (
-        <p className="text-muted-foreground">No matching events.</p>
+        <div className="text-center text-muted-foreground">No events found.</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {events.map(event => (
-            <form
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map((event) => (
+            <EventCard
               key={event.id}
-              action={async () => {
-                'use server'
-                await deleteEvent(event.id)
-              }}
-              className="border rounded-lg p-4 shadow-sm bg-white dark:bg-zinc-900 space-y-2"
-            >
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold">{event.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(event.date).toLocaleString()}
-                </p>
-                <p className="text-sm">{event.sport_type}</p>
-                <p className="text-sm text-muted-foreground">
-                  {event.venues?.join(', ')}
-                </p>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2 text-sm">
-                <Link
-                  href={`/dashboard/edit/${event.id}`}
-                  className="text-blue-600 hover:underline"
-                >
-                  Edit
-                </Link>
-                <button
-                  type="submit"
-                  className="text-red-600 hover:underline"
-                >
-                  Delete
-                </button>
-              </div>
-            </form>
+              id={event.id}
+              name={event.name}
+              date={event.date}
+              venue={event.venues}
+              sport={event.sport_type}
+            />
           ))}
         </div>
       )}
-    </div>
-  )
+    </main>
+  );
 }
