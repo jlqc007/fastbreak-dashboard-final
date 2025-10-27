@@ -15,10 +15,12 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { createEvent } from '@/lib/actions/create-event'
 import { useRouter } from 'next/navigation'
+import { createEvent } from '@/lib/actions/create-event'
+import { updateEvent } from '@/lib/actions/update-event'
 
 const formSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(1),
   sport_type: z.string().min(1),
   date: z.string().min(1),
@@ -26,11 +28,14 @@ const formSchema = z.object({
   venues: z.string().min(1),
 })
 
-export default function EventForm() {
+export type EventFormData = z.infer<typeof formSchema>
+
+export default function EventForm({ initialValues }: { initialValues?: EventFormData }) {
   const router = useRouter()
-  const form = useForm({
+
+  const form = useForm<EventFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialValues || {
       name: '',
       sport_type: '',
       date: '',
@@ -39,7 +44,7 @@ export default function EventForm() {
     },
   })
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: EventFormData) => {
     const formData = new FormData()
     Object.entries(values).forEach(([key, value]) => {
       if (key === 'venues') {
@@ -49,12 +54,14 @@ export default function EventForm() {
       }
     })
 
-    const result = await createEvent(formData)
+    const result = values.id
+      ? await updateEvent(values.id, formData)
+      : await createEvent(formData)
 
     if (result?.error) {
       toast.error(result.error)
     } else {
-      toast.success('Event created!')
+      toast.success(values.id ? 'Event updated!' : 'Event created!')
       router.push('/dashboard')
     }
   }
@@ -128,7 +135,7 @@ export default function EventForm() {
           )}
         />
         <Button type="submit" className="w-full">
-          Create Event
+          {initialValues?.id ? 'Update Event' : 'Create Event'}
         </Button>
       </form>
     </Form>
