@@ -10,7 +10,7 @@ type EventCardProps = {
   sport: string;
 };
 
-export const EventCard = ({ id, name, date, venue, sport }: EventCardProps) => {
+const EventCard = ({ id, name, date, venue, sport }: EventCardProps) => {
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 flex flex-col justify-between gap-2">
       <div className="flex items-center justify-between">
@@ -27,3 +27,5 @@ export const EventCard = ({ id, name, date, venue, sport }: EventCardProps) => {
     </div>
   );
 };
+
+export default EventCard;
