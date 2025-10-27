@@ -1,4 +1,3 @@
-// components/auth/AuthForm.tsx
 'use client'
 
 import { useState } from 'react'
@@ -25,6 +24,7 @@ const formSchema = z.object({
 })
 
 export default function AuthForm() {
+  const [isLogin, setIsLogin] = useState(true)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClientComponentClient()
@@ -38,56 +38,100 @@ export default function AuthForm() {
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setLoading(true)
-    const { data: authData, error } = await supabase.auth.signInWithPassword({
+
+    const method = isLogin ? 'signInWithPassword' : 'signUp'
+    const { error } = await supabase.auth[method]({
       email: data.email,
       password: data.password,
-    })
+    } as any)
 
     if (error) {
       toast.error(error.message)
     } else {
-      toast.success('Logged in!')
+      toast.success(isLogin ? 'Logged in!' : 'Signed up!')
       router.push('/dashboard')
     }
 
     setLoading(false)
   }
 
+  const handleOAuth = async () => {
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${location.origin}/auth/callback`,
+      },
+    })
+
+    if (error) {
+      toast.error(error.message)
+    }
+
+    setLoading(false)
+  }
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="you@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <div className="space-y-4">
+      <h1 className="text-xl font-bold text-center">
+        {isLogin ? 'Login' : 'Sign Up'}
+      </h1>
 
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="you@example.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
-        </Button>
-      </form>
-    </Form>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="••••••••" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Please wait...' : isLogin ? 'Login' : 'Sign Up'}
+          </Button>
+        </form>
+      </Form>
+
+      <Button
+        variant="outline"
+        className="w-full"
+        onClick={handleOAuth}
+        disabled={loading}
+      >
+        {loading ? 'Loading...' : 'Continue with Google'}
+      </Button>
+
+      <p className="text-sm text-center">
+        {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
+        <button
+          type="button"
+          onClick={() => setIsLogin(!isLogin)}
+          className="underline font-medium"
+        >
+          {isLogin ? 'Sign up' : 'Log in'}
+        </button>
+      </p>
+    </div>
   )
 }
