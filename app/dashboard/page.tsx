@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getUserEvents } from '@/lib/queries/events';
 import EventCard from '@/components/events/EventCard';
+import type { EventCardProps } from '@/components/events/EventCard';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -13,9 +14,7 @@ export default function DashboardPage() {
 
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [sportFilter, setSportFilter] = useState(searchParams.get('sport') || '');
-  const [events, setEvents] = useState<
-    { id: string; name: string; date: string; venue: string; sport: string }[]
-  >([]);
+  const [events, setEvents] = useState<EventCardProps[]>([]);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -39,8 +38,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-6">
         <Input
           placeholder="Search events..."
           value={search}
@@ -53,26 +51,22 @@ export default function DashboardPage() {
           onChange={(e) => setSportFilter(e.target.value)}
           className="w-full sm:w-1/3"
         />
-        <Button
-          onClick={handleFilter}
-          disabled={isPending}
-          className="sm:w-1/6"
-        >
+        <Button onClick={handleFilter} disabled={isPending}>
           {isPending ? 'Filtering...' : 'Apply Filters'}
         </Button>
+        <Button variant="outline" onClick={() => router.push('/')}>
+          Home
+        </Button>
+        <Button onClick={() => router.push('/dashboard/create')}>+ Create Event</Button>
       </div>
 
-      {/* Events Grid */}
-      <div>
-        <h2 className="text-xl font-semibold text-foreground mb-4">Your Events</h2>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {events.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No events found.</p>
+          <p className="text-muted-foreground">No events found.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <EventCard key={event.id} {...event} />
-            ))}
-          </div>
+          events.map((event) => (
+            <EventCard key={event.id} {...event} />
+          ))
         )}
       </div>
     </div>

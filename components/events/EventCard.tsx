@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-type EventCardProps = {
+export type EventCardProps = {
   id: string;
   name: string;
   date: string;
