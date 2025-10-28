@@ -11,16 +11,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import EventCard from '@/components/events/EventCard';
-import type { EventCardProps } from '@/components/events/EventCard';
 import { searchEvents } from '@/lib/actions/search-events';
 import { toast } from 'sonner';
 
+type DashboardEvent = {
+  id: string;
+  name: string;
+  date: string;
+  sport_type: string;
+  description?: string | null;
+  venues?: string[] | null;
+};
+
 type DashboardClientProps = {
-  initialEvents: EventCardProps[];
+  initialEvents: DashboardEvent[];
 };
 
 export default function DashboardClient({ initialEvents }: DashboardClientProps) {
-  const [events, setEvents] = useState<EventCardProps[]>(initialEvents);
+  const [events, setEvents] = useState<DashboardEvent[]>(initialEvents);
   const [search, setSearch] = useState('');
   const [sportFilter, setSportFilter] = useState('all');
   const [loading, setLoading] = useState(false);
@@ -88,6 +96,7 @@ export default function DashboardClient({ initialEvents }: DashboardClientProps)
             <EventCard
               key={event.id}
               {...event}
+              sport={event.sport_type}
               onDelete={(id) => setEvents((prev) => prev.filter((e) => e.id !== id))}
             />
           ))}

@@ -28,11 +28,11 @@ import { updateEvent } from '@/lib/actions/update-event'
 
 const formSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1),
-  sport_type: z.string().min(1),
-  date: z.string().min(1),
-  description: z.string().optional(),
-  venues: z.string().min(1),
+  name: z.string().min(1, 'Event name is required'),
+  sport_type: z.string().min(1, 'Sport type is required'),
+  date: z.string().min(1, 'Date and time is required'),
+  description: z.string().min(1, 'Description is required'),
+  venues: z.string().min(1, 'At least one venue is required'),
 })
 
 export type EventFormData = z.infer<typeof formSchema>
@@ -131,9 +131,9 @@ export default function EventForm({ initialValues }: { initialValues?: EventForm
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Description *</FormLabel>
               <FormControl>
-                <Textarea placeholder="Optional event details" {...field} />
+                <Textarea placeholder="Event details..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
