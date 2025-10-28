@@ -75,7 +75,6 @@ export default function DashboardClient({ initialEvents }: DashboardClientProps)
             <SelectItem value="volleyball">Volleyball</SelectItem>
             <SelectItem value="football">Football</SelectItem>
             <SelectItem value="baseball">Baseball</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
           </SelectContent>
         </Select>
         <Button onClick={handleSearch} disabled={loading}>

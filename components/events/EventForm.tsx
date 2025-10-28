@@ -14,6 +14,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { createEvent } from '@/lib/actions/create-event'
@@ -88,9 +95,20 @@ export default function EventForm({ initialValues }: { initialValues?: EventForm
           render={({ field }) => (
             <FormItem>
               <FormLabel>Sport Type</FormLabel>
-              <FormControl>
-                <Input placeholder="Basketball, Soccer..." {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a sport" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="basketball">Basketball</SelectItem>
+                  <SelectItem value="soccer">Soccer</SelectItem>
+                  <SelectItem value="volleyball">Volleyball</SelectItem>
+                  <SelectItem value="football">Football</SelectItem>
+                  <SelectItem value="baseball">Baseball</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
