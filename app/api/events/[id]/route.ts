@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createServerActionSupabaseClient } from '@/lib/supabase/server'
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-  const supabase = await createServerActionSupabaseClient()
-    const { error } = await supabase.from('events').delete().eq('id', params.id)
+    const { id } = await params
+    const supabase = await createServerActionSupabaseClient()
+    const { error } = await supabase.from('events').delete().eq('id', id)
     if (error) {
       console.error('Failed to delete event:', error.message)
       return NextResponse.json({ error: error.message }, { status: 500 })
