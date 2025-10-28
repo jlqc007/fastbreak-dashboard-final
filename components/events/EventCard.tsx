@@ -32,7 +32,7 @@ const EventCard = ({ id, name, date, venue, sport, description, venues, onDelete
   const [loading, setLoading] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   
-  // Format date to YYYY/MM/DD HH:MM
+  // Format date to MM/DD/YYYY HH:MM
   const formatDate = (d: string) => {
     try {
       const dt = new Date(d)
@@ -42,7 +42,7 @@ const EventCard = ({ id, name, date, venue, sport, description, venues, onDelete
       const dd = String(dt.getDate()).padStart(2, '0')
       const hh = String(dt.getHours()).padStart(2, '0')
       const min = String(dt.getMinutes()).padStart(2, '0')
-      return `${yyyy}/${mm}/${dd} ${hh}:${min}`
+      return `${mm}/${dd}/${yyyy} ${hh}:${min}`
     } catch (e) {
       return d
     }

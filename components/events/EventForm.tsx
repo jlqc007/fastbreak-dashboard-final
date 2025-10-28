@@ -40,6 +40,23 @@ export type EventFormData = z.infer<typeof formSchema>
 export default function EventForm({ initialValues }: { initialValues?: EventFormData }) {
   const router = useRouter()
 
+  // Format a persisted ISO/date string to the value format expected by
+  // <input type="datetime-local"> => YYYY-MM-DDTHH:MM (no seconds, no timezone)
+  const toDatetimeLocal = (value: string) => {
+    try {
+      const d = new Date(value)
+      if (isNaN(d.getTime())) return value
+      const yyyy = d.getFullYear()
+      const mm = String(d.getMonth() + 1).padStart(2, '0')
+      const dd = String(d.getDate()).padStart(2, '0')
+      const hh = String(d.getHours()).padStart(2, '0')
+      const min = String(d.getMinutes()).padStart(2, '0')
+      return `${yyyy}-${mm}-${dd}T${hh}:${min}`
+    } catch {
+      return value
+    }
+  }
+
   const form = useForm<EventFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: initialValues || {
@@ -50,6 +67,16 @@ export default function EventForm({ initialValues }: { initialValues?: EventForm
       venues: '',
     },
   })
+
+  // If we have initialValues with a date, ensure the input receives a
+  // datetime-local compatible string so the field is pre-filled on edit.
+  if (initialValues && initialValues.date) {
+    const formatted = toDatetimeLocal(initialValues.date)
+    // Only update if different to avoid unnecessary re-renders
+    if (formatted !== form.getValues('date')) {
+      form.setValue('date', formatted, { shouldDirty: false })
+    }
+  }
 
   const onSubmit = async (values: EventFormData) => {
     const formData = new FormData()
