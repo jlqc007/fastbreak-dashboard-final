@@ -1,11 +1,11 @@
-'use client'
+ 'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { signInAction, signUpAction } from '@/lib/actions/auth'
 import {
   Form,
   FormField,
@@ -27,7 +27,7 @@ export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,38 +37,37 @@ export default function AuthForm() {
   })
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    setLoading(true)
+    try {
+      setLoading(true)
 
-    const method = isLogin ? 'signInWithPassword' : 'signUp'
-    const { error } = await supabase.auth[method]({
-      email: data.email,
-      password: data.password,
-    } as any)
+      if (isLogin) {
+        const res = await signInAction(data.email, data.password)
+        if (res.error) throw new Error(res.error)
+      } else {
+        const res = await signUpAction(data.email, data.password)
+        if (res.error) throw new Error(res.error)
+      }
 
-    if (error) {
+  toast.success(isLogin ? 'Logged in!' : 'Account created successfully!')
+  // Use a full navigation so any Set-Cookie from the server action is
+  // applied before the dashboard server components read cookies.
+  window.location.href = '/dashboard'
+    } catch (error: any) {
       toast.error(error.message)
-    } else {
-      toast.success(isLogin ? 'Logged in!' : 'Signed up!')
-      router.push('/dashboard')
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   const handleOAuth = async () => {
+    // Start OAuth flow via server route which uses the server Supabase helper
     setLoading(true)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${location.origin}/auth/callback`,
-      },
-    })
-
-    if (error) {
-      toast.error(error.message)
+    try {
+      // simply navigate to the server route which will redirect to Google
+      window.location.href = '/api/auth/google'
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   return (

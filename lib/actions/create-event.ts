@@ -1,8 +1,9 @@
 'use server'
 
 import { z } from 'zod'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerActionSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { withAction } from './utils'
 
 const eventSchema = z.object({
   name: z.string().min(1),
@@ -13,37 +14,31 @@ const eventSchema = z.object({
 })
 
 export async function createEvent(formData: FormData) {
-  const supabase = createServerSupabaseClient()
-  const { data: sessionData } = await supabase.auth.getSession()
-  const user = sessionData.session?.user
+  return await withAction(async () => {
+  const supabase = await createServerActionSupabaseClient()
+    const { data: sessionData } = await supabase.auth.getSession()
+    const user = sessionData.session?.user
 
-  if (!user) throw new Error('Unauthorized')
+    if (!user) throw new Error('Unauthorized')
 
-  const values = {
-    name: formData.get('name'),
-    sport_type: formData.get('sport_type'),
-    date: formData.get('date'),
-    description: formData.get('description'),
-    venues: formData.getAll('venues'),
-  }
+    const values = {
+      name: formData.get('name'),
+      sport_type: formData.get('sport_type'),
+      date: formData.get('date'),
+      description: formData.get('description'),
+      venues: formData.getAll('venues'),
+    }
 
-  const parsed = eventSchema.safeParse(values)
+    const parsed = eventSchema.parse(values)
 
-  if (!parsed.success) {
-    console.error(parsed.error.format())
-    return { error: 'Validation failed' }
-  }
+    const { error } = await supabase.from('events').insert({
+      ...parsed,
+      user_id: user.id,
+    })
 
-  const { error } = await supabase.from('events').insert({
-    ...parsed.data,
-    user_id: user.id,
+    if (error) throw new Error(error.message)
+
+    revalidatePath('/dashboard') // refresh list
+    return true
   })
-
-  if (error) {
-    console.error(error.message)
-    return { error: 'Failed to create event' }
-  }
-
-  revalidatePath('/dashboard') // refresh list
-  return { success: true }
 }

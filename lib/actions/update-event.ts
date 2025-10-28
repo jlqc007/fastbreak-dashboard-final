@@ -1,8 +1,9 @@
 'use server'
 
 import { z } from 'zod'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerActionSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { withAction } from './utils'
 
 const updateSchema = z.object({
   name: z.string().min(1),
@@ -13,32 +14,26 @@ const updateSchema = z.object({
 })
 
 export async function updateEvent(id: string, formData: FormData) {
-  const supabase = createServerSupabaseClient()
-  const values = {
-    name: formData.get('name'),
-    sport_type: formData.get('sport_type'),
-    date: formData.get('date'),
-    description: formData.get('description'),
-    venues: formData.getAll('venues'),
-  }
+  return await withAction(async () => {
+  const supabase = await createServerActionSupabaseClient()
+    const values = {
+      name: formData.get('name'),
+      sport_type: formData.get('sport_type'),
+      date: formData.get('date'),
+      description: formData.get('description'),
+      venues: formData.getAll('venues'),
+    }
 
-  const parsed = updateSchema.safeParse(values)
+    const parsed = updateSchema.parse(values)
 
-  if (!parsed.success) {
-    console.error(parsed.error.format())
-    return { error: 'Validation failed' }
-  }
+    const { error } = await supabase
+      .from('events')
+      .update(parsed)
+      .eq('id', id)
 
-  const { error } = await supabase
-    .from('events')
-    .update(parsed.data)
-    .eq('id', id)
+    if (error) throw new Error(error.message)
 
-  if (error) {
-    console.error(error.message)
-    return { error: 'Failed to update event' }
-  }
-
-  revalidatePath('/dashboard')
-  return { success: true }
+    revalidatePath('/dashboard')
+    return true
+  })
 }

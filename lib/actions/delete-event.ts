@@ -1,18 +1,18 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerActionSupabaseClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { withAction } from './utils'
 
 export async function deleteEvent(id: string) {
-  const supabase = createServerSupabaseClient()
+  return await withAction(async () => {
+  const supabase = await createServerActionSupabaseClient()
 
-  const { error } = await supabase.from('events').delete().eq('id', id)
+    const { error } = await supabase.from('events').delete().eq('id', id)
 
-  if (error) {
-    console.error(error.message)
-    return { error: 'Failed to delete event' }
-  }
+    if (error) throw new Error(error.message)
 
-  revalidatePath('/dashboard')
-  return { success: true }
+    revalidatePath('/dashboard')
+    return true
+  })
 }
